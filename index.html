@@ -1,260 +1,86 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="UTF-8">
-<title>CERIDWEN</title>
+  <meta charset="UTF-8">
+  <title>CERIDWEN</title>
 
-<style>
-body {
-  margin:0;
-  font-family:Arial;
-  background:black;
-  color:white;
-  overflow:hidden;
-}
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial;
+      background: black;
+      color: white;
+      text-align: center;
+    }
 
-/* 🌌 พื้นหลัง */
-canvas {
-  position:fixed;
-  top:0;
-  left:0;
-  z-index:-2;
-}
+    h1 {
+      margin-top: 40px;
+      font-size: 40px;
+      text-shadow: 0 0 20px purple;
+    }
 
-/* 🔮 โลโก้ */
-.bg-logo {
-  position:fixed;
-  top:50%;
-  left:50%;
-  transform:translate(-50%,-50%);
-  font-size:120px;
-  color:rgba(255,255,255,0.05);
-  z-index:-1;
-  animation: float 6s infinite, glow 3s infinite alternate;
-}
+    .box {
+      margin: 30px auto;
+      padding: 20px;
+      width: 300px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 15px;
+      box-shadow: 0 0 20px purple;
+    }
 
-@keyframes float {
-  50% { transform:translate(-50%,-60%); }
-}
+    input {
+      width: 80%;
+      padding: 10px;
+      border-radius: 10px;
+      border: none;
+      margin-bottom: 10px;
+    }
 
-@keyframes glow {
-  from { text-shadow:0 0 20px purple; }
-  to { text-shadow:0 0 60px purple; }
-}
+    button {
+      padding: 10px 20px;
+      border-radius: 10px;
+      border: none;
+      background: purple;
+      color: white;
+      cursor: pointer;
+    }
 
-.logo {
-  text-align:center;
-  margin-top:30px;
-  font-size:50px;
-  text-shadow:0 0 20px white;
-}
+    .list {
+      margin-top: 20px;
+    }
 
-/* 🧑‍🤝‍🧑 การ์ด */
-.container {
-  display:flex;
-  justify-content:center;
-  flex-wrap:wrap;
-  gap:30px;
-  margin-top:40px;
-}
-
-.card {
-  background:#111;
-  padding:20px;
-  border-radius:20px;
-  text-align:center;
-  width:160px;
-  transition:0.3s;
-  box-shadow:0 0 20px rgba(138,43,226,0.3);
-}
-
-.card:hover {
-  transform:translateY(-10px) scale(1.05);
-  box-shadow:0 0 40px purple;
-}
-
-.card img {
-  width:80px;
-  border-radius:50%;
-}
-
-button {
-  margin-top:8px;
-  padding:6px 10px;
-  border:none;
-  border-radius:10px;
-  cursor:pointer;
-}
-
-.fb { background:#1877f2; color:white; }
-
-/* 📦 popup */
-.popup {
-  position:fixed;
-  top:50%;
-  left:50%;
-  transform:translate(-50%,-50%) scale(0);
-  background:#111;
-  padding:30px;
-  border-radius:20px;
-  text-align:center;
-  transition:0.3s;
-  z-index:10;
-  box-shadow:0 0 40px purple;
-}
-
-.popup.active {
-  transform:translate(-50%,-50%) scale(1);
-}
-
-/* 👻 ปุ่มแอดมิน */
-.admin-btn {
-  position:fixed;
-  top:10px;
-  left:10px;
-  opacity:0;
-}
-
-/* ✨ เมาส์ */
-.cursor {
-  position:fixed;
-  width:120px;
-  height:120px;
-  background:radial-gradient(circle, rgba(138,43,226,0.4), transparent);
-  border-radius:50%;
-  pointer-events:none;
-}
-</style>
+    .item {
+      background: rgba(255,255,255,0.1);
+      margin: 10px;
+      padding: 10px;
+      border-radius: 10px;
+    }
+  </style>
 </head>
 
 <body>
 
-<canvas id="bg"></canvas>
-<div class="bg-logo">CERIDWEN</div>
-<div class="cursor" id="cursor"></div>
+<h1>CERIDWEN</h1>
 
-<h1 class="logo">CERIDWEN</h1>
+<div class="box">
+  <input id="nameInput" placeholder="ใส่ชื่อของคุณ">
+  <br>
+  <button onclick="saveToFirebase()">บันทึก</button>
 
-<div class="container" id="members"></div>
+  <div class="list" id="list"></div>
+</div>
 
-<div id="popup" class="popup" onclick="this.classList.remove('active')"></div>
-
-<button class="admin-btn" onclick="adminLogin()">⚙️</button>
-
-<audio id="bgmusic" autoplay loop>
-  <source src="music.mp3" type="audio/mpeg">
-</audio>
-
-<!-- Firebase -->
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyCr42iK2m6dwxqO2ZEFTIicDSWawb8m5ck",
-  authDomain: "ceridwen-7701e.firebaseapp.com",
-  projectId: "ceridwen-7701e",
-  storageBucket: "ceridwen-7701e.firebasestorage.app",
-  messagingSenderId: "1016625949342",
-  appId: "1:1016625949342:web:e11a12029ffae769f1298f"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-/* โหลดสมาชิก */
-async function loadMembers(){
-  const querySnapshot = await getDocs(collection(db, "members"));
-  const container = document.getElementById("members");
-  container.innerHTML="";
-
-  querySnapshot.forEach(doc=>{
-    const m = doc.data();
-    container.innerHTML += `
-    <div class="card">
-      <img src="${m.img}">
-      <h3>${m.name}</h3>
-      <button onclick="show('${m.name}','${m.role}','${m.desc}','${m.img}')">โปรไฟล์</button>
-      <a href="${m.fb}" target="_blank">
-        <button class="fb">Facebook</button>
-      </a>
-    </div>`;
-  });
-}
-
-loadMembers();
-
-/* เพิ่มสมาชิก */
-window.adminLogin = async function(){
-  const pass = prompt("รหัสแอดมิน:");
-  if(pass === "1234"){  // 🔐 เปลี่ยนรหัสตรงนี้ได้
-    const name = prompt("ชื่อ:");
-    const role = prompt("ตำแหน่ง:");
-    const desc = prompt("คำอธิบาย:");
-    const img = prompt("ลิงก์รูป:");
-    const fb = prompt("ลิงก์ Facebook:");
-
-    await addDoc(collection(db,"members"),{
-      name, role, desc, img, fb
-    });
-
-    alert("เพิ่มแล้ว!");
-    loadMembers();
-  }
-}
-
-/* popup */
-window.show = function(name,role,desc,img){
-  const p = document.getElementById("popup");
-  p.innerHTML = `
-    <img src="${img}" width="100">
-    <h2>${name}</h2>
-    <p>${role}</p>
-    <p>${desc}</p>`;
-  p.classList.add("active");
-}
-
-/* เมาส์ */
-const cursor = document.getElementById("cursor");
-document.addEventListener("mousemove",e=>{
-  cursor.style.left=e.clientX+"px";
-  cursor.style.top=e.clientY+"px";
-});
-
-/* particle */
-const canvas = document.getElementById("bg");
-const ctx = canvas.getContext("2d");
-canvas.width = innerWidth;
-canvas.height = innerHeight;
-
-let p=[];
-for(let i=0;i<100;i++){
-  p.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight,r:Math.random()*2});
-}
-
-function draw(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  p.forEach(i=>{
-    i.y+=0.2;
-    if(i.y>canvas.height) i.y=0;
-    ctx.beginPath();
-    ctx.arc(i.x,i.y,i.r,0,Math.PI*2);
-    ctx.fillStyle="white";
-    ctx.fill();
-  });
-  requestAnimationFrame(draw);
-}
-draw();
-
-/* เพลง */
-document.body.onclick=()=>document.getElementById("bgmusic").play();
-
-</script>
-
-</body><script type="module">
   // 🔥 import firebase
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+  import {
+    getFirestore,
+    collection,
+    addDoc,
+    getDocs,
+    orderBy,
+    query
+  } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
   // 🔥 config ของคุณ
   const firebaseConfig = {
@@ -267,23 +93,50 @@ document.body.onclick=()=>document.getElementById("bgmusic").play();
     measurementId: "G-GK11X4EL0S"
   };
 
-  // 🔥 เริ่มใช้งาน
+  // 🔥 เริ่มต้น
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  // 🔥 ฟังก์ชันเพิ่มข้อมูล
+  // 🔥 บันทึกข้อมูล
   window.saveToFirebase = async () => {
-    try {
-      await addDoc(collection(db, "members"), {
-        name: "Bank",
-        time: new Date()
-      });
+    const name = document.getElementById("nameInput").value;
 
-      alert("บันทึกสำเร็จ!");
-    } catch (err) {
-      console.error(err);
-      alert("error!");
+    if (!name) {
+      alert("กรอกชื่อก่อน!");
+      return;
     }
+
+    await addDoc(collection(db, "members"), {
+      name: name,
+      time: new Date()
+    });
+
+    document.getElementById("nameInput").value = "";
+    loadData();
   };
+
+  // 🔥 ดึงข้อมูลมาแสดง
+  async function loadData() {
+    const list = document.getElementById("list");
+    list.innerHTML = "";
+
+    const q = query(collection(db, "members"), orderBy("time", "desc"));
+    const querySnapshot = await getDocs(q);
+
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+
+      const div = document.createElement("div");
+      div.className = "item";
+      div.innerText = data.name;
+
+      list.appendChild(div);
+    });
+  }
+
+  // โหลดตอนเปิดเว็บ
+  loadData();
 </script>
+
+</body>
 </html>
