@@ -116,18 +116,19 @@ h1{
 }
 
 /* card */
-.card{
-  background:#111;
-  padding:20px;
-  border-radius:20px;
-  text-align:center;
-  transition:0.2s;
-  transform-style:preserve-3d;
-  animation:slide 0.6s;
+.card img {
+  width: 80px !important;
+  height: 80px !important;
+  min-width: 80px;
+  min-height: 80px;
+  max-width: 80px;
+  max-height: 80px;
 
-  overflow: hidden;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  margin: 0 auto 10px;
 }
-
 @keyframes slide{
   from{opacity:0;transform:translateY(40px);}
   to{opacity:1;}
@@ -218,28 +219,18 @@ onSnapshot(collection(db,"members"),snap=>{
 /* render */
 function render(arr){
   list.innerHTML="";
-
   arr.forEach(u=>{
     let r="member";
-
-    if(u.role==="THEBOSS") r="theboss";
-    if(u.role==="SUP/BY") r="supby";
+    if(u.rank==="THEBOSS") r="theboss";
+    if(u.rank==="SUP/BY") r="supby";
 
     list.innerHTML+=`
     <div class="card">
-      <img src="${u.image || 'https://via.placeholder.com/80'}">
-
-      <div class="rank ${r}">
-        ${u.role || "MEMBER"}
-      </div>
-
+      <img src="${u.image||'https://via.placeholder.com/80'}" class="avatar">
+      <div class="rank ${r}">${u.rank||'MEMBER'}</div>
       <h3>${u.name}</h3>
-
-      <a class="fb" href="${u.facebook}" target="_blank">
-        Facebook
-      </a>
-    </div>
-    `;
+      <a class="fb" href="${u.facebook}" target="_blank">Facebook</a>
+    </div>`;
   });
 }
 
