@@ -251,5 +251,39 @@ document.body.onclick=()=>document.getElementById("bgmusic").play();
 
 </script>
 
-</body>
+</body><script type="module">
+  // 🔥 import firebase
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+  // 🔥 config ของคุณ
+  const firebaseConfig = {
+    apiKey: "AIzaSyCr42iK2m6dwxqO2ZEFTIicDSWawb8m5ck",
+    authDomain: "ceridwen-7701e.firebaseapp.com",
+    projectId: "ceridwen-7701e",
+    storageBucket: "ceridwen-7701e.firebasestorage.app",
+    messagingSenderId: "1016625949342",
+    appId: "1:1016625949342:web:e11a12029ffae769f1298f",
+    measurementId: "G-GK11X4EL0S"
+  };
+
+  // 🔥 เริ่มใช้งาน
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // 🔥 ฟังก์ชันเพิ่มข้อมูล
+  window.saveToFirebase = async () => {
+    try {
+      await addDoc(collection(db, "members"), {
+        name: "Bank",
+        time: new Date()
+      });
+
+      alert("บันทึกสำเร็จ!");
+    } catch (err) {
+      console.error(err);
+      alert("error!");
+    }
+  };
+</script>
 </html>
